@@ -1,0 +1,42 @@
+                    CISC 454 Assignment 3
+
+                 worth 29% of the final grade
+
+                   Due April 7, 2017 at 6pm
+
+
+You are to implement glossy reflection, transparency, and caustic
+photon maps in a raytracer.  Photon maps will take at least as much
+time as glossy reflection and transparency, combined.  See "YOUR CODE
+HERE" in the code.
+
+You may work in groups of two.  Graduate students must work individually.
+
+After getting your code working, create an interesting scene that
+demonstrates each of these effects.  You may use digital models from
+elsewhere and may use 3D editors to create your scene.  If you do
+that, the objects will have to be in Wavefront (.obj) format.
+
+To Hand In
+
+  Marks will be deducted if these instructions are not followed exactly.
+
+  Marks will be deducted if the code does not compile and run on the
+  CasLab Linux machines.
+  
+  Make a directory called 'a3'.  In that directory, put
+
+    - These files: *.cpp, *.h, Makefile, wavefront.frag, wavefront.vert
+
+    - a README file with your name(s), student number(s), and email address(es)
+
+    - at least two screen captured images in PNG format showing your
+      interesting scene and showing the three effects.
+
+  Create a ZIP archive of the a3 directory.
+
+  Name the archive with your student number(s):
+    STUDENTNUMBER.zip or
+    STUDENTNUMBER1_STUDENTNUMBER2.zip
+
+  Email the archive to stratius@gmail.com.

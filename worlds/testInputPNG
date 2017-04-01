@@ -1,0 +1,58 @@
+# This shows a flower texture which contains *transparent* pixels.
+# The PNG image format allows you to specify such pixels (which
+# can't be done with the PPM format).
+
+eye
+  0 0 10
+  0 0 0
+  0 1 0
+  0.25
+
+light
+  0 0 10      # position
+  1 1 1       # colour
+
+light
+  0 0 -10     # position
+  1 1 1       # colour
+
+material
+  white       # name
+  1 1 1       # ambient reflectivity (Ka)
+  .5 .5 .5       # diffuse reflectivity (Kd)
+  .5 .5 .5       # specular reflectivity (Ks)
+  10          # shininess (n)
+  1           # glossiness (g)
+  0 0 0       # emission (Ie)
+  1           # opacity (alpha)
+  data/brick.ppm   # texture filename (- means none)
+  -           # bump map filename (- means none)
+
+material
+  flower      # name
+  0 0 0       # ambient reflectivity (Ka)
+  .5 .5 .5    # diffuse reflectivity (Kd)
+  .2 .2 .2    # specular reflectivity (Ks)
+  20          # shininess (n)
+  1           # glossiness (g)
+  0 0 0       # emission (Ie)
+  1           # opacity (alpha)
+  data/flower.png  # texture filename
+  -           # bump map filename (- means none)
+
+sphere
+  1           # radius
+  0 0 0       # centre
+  white       # material name
+
+triangle
+  -0.5 -0.5 1.5 / 0 0
+   0.5 -0.5 1.5 / 1 0
+   0.5  0.5 1.5 / 1 1
+  flower
+
+triangle
+   0.5  0.5 1.5 / 1 1
+  -0.5  0.5 1.5 / 0 1
+  -0.5 -0.5 1.5 / 0 0
+  flower
