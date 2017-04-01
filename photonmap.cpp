@@ -27,13 +27,14 @@ void PhotonMap::populate( Scene *scene )
   // Call forwardTraceRay() for lots of directions around each point
   // light.  Use randomDir() for the directions.
    seq<Photon*> * photons = new seq<Photon*>(0);
-
-  for( int i =0; i< PHOTONS_PER_LIGHT; i++){
-	forwardTraceRay( vec3 &start, vec3 &dir, vec3 power, int thisObjIndex, int thisObjPartIndex, Scene *scene, bool specularDone, int depth );
-	*photons.pushback()
-
-
-  }
+	
+	for (int i=0; i< scene->lights.size(); i++){
+		for (int j=0; j<PHOTONS_PER_LIGHT; j++){
+			forwardTraceRay(scene->lights[i]->position,randomDir(),scene->lights[i]->colour/PHOTONS_PER_LIGHT, i, j,scene, false, 0);
+			
+		}
+		
+	}
   // Build the KD tree
 
   
