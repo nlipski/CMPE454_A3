@@ -30,7 +30,7 @@ void PhotonMap::populate( Scene *scene )
 
   for( int i =0; i< PHOTONS_PER_LIGHT; i++){
 	forwardTraceRay( vec3 &start, vec3 &dir, vec3 power, int thisObjIndex, int thisObjPartIndex, Scene *scene, bool specularDone, int depth );
-	*photons.pushback()
+	*photons[i].
 
 
   }
