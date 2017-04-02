@@ -26,11 +26,12 @@ void PhotonMap::populate( Scene *scene )
   //
   // Call forwardTraceRay() for lots of directions around each point
   // light.  Use randomDir() for the directions.
-   seq<Photon*> * photons = new seq<Photon*>(0);
-	
-	for (int i=0; i< scene->lights.size(); i++){
-		for (int j=0; j<PHOTONS_PER_LIGHT; j++){
-			forwardTraceRay(scene->lights[i]->position,randomDir(),scene->lights[i]->colour/PHOTONS_PER_LIGHT, i, j,scene, false, 0);
+   
+	int i=0, j=0;	
+	for ( i=0; i< scene->lights.size(); i++){
+		for (j=0; j<PHOTONS_PER_LIGHT; j++){
+			vec3 dir=randomDir();
+			forwardTraceRay((scene->lights[i]->position),dir,scene->lights[i]->colour/PHOTONS_PER_LIGHT, i, j,scene, false, 0);
 			
 		}
 		

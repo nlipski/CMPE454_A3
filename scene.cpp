@@ -175,7 +175,15 @@ vec3 Scene::raytrace( vec3 &rayStart, vec3 &rayDir, int depth, int thisObjIndex,
     //
     // Add glossy reflection to Iout.  Use 'glossyIterations' samples
     // and use 'g' for the spread.
-    
+	vec3 Iin;
+	float angle= acos(g);
+	for (int i=0; i<glossyIterations;i++){
+	Iin=P*angle/6.28;
+	Iin = raytrace(Iin,R, depth, objIndex, objPartIndex);
+	Iout = Iout +  calcIout(N, R, E, R, kd, mat->ks, mat->n ,Iin)/glossyIterations;
+	}	
+      
+
   }
 
   // Add direct contributions from point lights
@@ -230,7 +238,7 @@ vec3 Scene::raytrace( vec3 &rayStart, vec3 &rayDir, int depth, int thisObjIndex,
     // Blend according to 'opacity'.
     //
     // You should modify Scene::findRefractionDirection() and use it.
-
+	//Iout+=calcIout()
   }
 
   return Iout;
@@ -249,7 +257,7 @@ bool Scene::findRefractionDirection( vec3 &rayDir, vec3 &N, vec3 &refractionDir 
 
 {
   // YOUR CODE HERE
-
+	refractionDir = rayDir - 2 * (rayDir*N);
   return true;
 }
 
