@@ -177,10 +177,23 @@ vec3 Scene::raytrace( vec3 &rayStart, vec3 &rayDir, int depth, int thisObjIndex,
     // and use 'g' for the spread.
 	vec3 Iin;
 	float angle= acos(g);
+  float a,b,c=2;
+  float d=1/(tan(angle));
+  vec3 p;
+  vec3 len;
 	for (int i=0; i<glossyIterations;i++){
-	Iin=P*angle/6.28;
-	Iin = raytrace(Iin,R, depth, objIndex, objPartIndex);
-	Iout = Iout +  calcIout(N, R, E, R, kd, mat->ks, mat->n ,Iin)/glossyIterations;
+
+    while (c>1){
+      a=(((float)rand()/RAND_MAX));
+      b=(((float)rand()/RAND_MAX));
+      c=(a*a)+(b*b);
+     // std::cout<<a<<"    "<<b<<std::endl;
+    }
+    p= P + (d*R);
+    len=p-P;
+    p=len/ (sqrt((len.x*len.x)+(len.y*len.y)+(len.z*len.z)));
+	  Iin = raytrace(P,p, depth, objIndex, objPartIndex);
+	  Iout = Iout +  calcIout(N, R, E, R, kd, mat->ks, mat->n ,Iin);
 	}	
       
 
@@ -217,11 +230,13 @@ vec3 Scene::raytrace( vec3 &rayStart, vec3 &rayDir, int depth, int thisObjIndex,
 
   if (photonMap.isPopulated()) {
 
+
     // YOUR CODE HERE
     //
     // Look up photons in the photon map and add their contribution to
     // Iout.  Note that the photon map is available only if you
     // pressed 'm' to populate it.
+
     
   }
 
@@ -238,7 +253,10 @@ vec3 Scene::raytrace( vec3 &rayStart, vec3 &rayDir, int depth, int thisObjIndex,
     // Blend according to 'opacity'.
     //
     // You should modify Scene::findRefractionDirection() and use it.
-	//Iout+=calcIout()
+    vec3 refractionDir; 
+    if(findRefractionDirection(rayDir, N, refractionDir))
+       Iout = Iout*(opacity) + (1-opacity)*raytrace(P,refractionDir, depth, objIndex, objPartIndex);
+    
   }
 
   return Iout;
@@ -257,7 +275,28 @@ bool Scene::findRefractionDirection( vec3 &rayDir, vec3 &N, vec3 &refractionDir 
 
 {
   // YOUR CODE HERE
-	refractionDir = rayDir - 2 * (rayDir*N);
+  double n1, n2;
+  double eta,c1,c2;
+
+  if (rayDir*N >0 ){
+    n1 =1.008;
+    n2 =1.510;
+  }
+  else {
+
+    n1 =1.510;
+    n2 = 1.008;
+  } 
+  double ratio = n1/n2;
+
+  double cosI = -(N.normalize()*rayDir.normalize());
+  double sinT2 = ratio*ratio *(1-cosI*cosI);
+  if (sinT2 >1.0)
+      return false;
+  double cosT = sqrt(1.0 - sinT2);
+
+  refractionDir = ratio*rayDir.normalize() + (ratio*cosI*cosT)*N.normalize(); 
+
   return true;
 }
 
