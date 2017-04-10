@@ -177,10 +177,11 @@ vec3 Scene::raytrace( vec3 &rayStart, vec3 &rayDir, int depth, int thisObjIndex,
     // and use 'g' for the spread.
 	vec3 Iin;
 	float angle= acos(g);
-  float a,b,c=2;
+  float a,b,z,c=2;
   float d=1/(tan(angle));
-  vec3 p;
-  vec3 len;
+  vec3 u,v;
+  vec3 p,plane_n;
+  vec3 len,ray_dir;
 	for (int i=0; i<glossyIterations;i++){
 
     while (c>1){
@@ -189,10 +190,18 @@ vec3 Scene::raytrace( vec3 &rayStart, vec3 &rayDir, int depth, int thisObjIndex,
       c=(a*a)+(b*b);
      // std::cout<<a<<"    "<<b<<std::endl;
     }
-    p= P + (d*R);
+
+
+   //p= P + (d*R);
     len=p-P;
-    p=len/ (sqrt((len.x*len.x)+(len.y*len.y)+(len.z*len.z)));
-	  Iin = raytrace(P,p, depth, objIndex, objPartIndex);
+    plane_n=len.normalize();
+    
+    z= plane_n * p;
+    u = (vec3(0,0,z/plane_n.z)-p).normalize();
+    v= u ^ plane_n;
+    p= P + (d*R) + (a*u)+ (b*v);
+    ray_dir=(p-P).normalize();
+	  Iin = raytrace(P,ray_dir, depth, objIndex, objPartIndex);
 	  Iout = Iout +  calcIout(N, R, E, R, kd, mat->ks, mat->n ,Iin);
 	}	
       
@@ -281,14 +290,14 @@ bool Scene::findRefractionDirection( vec3 &rayDir, vec3 &N, vec3 &refractionDir 
   vec3 N_temp = N;
  // float dot = rayDir*N;
   if (cosI>0){
-    n1 =1.008;
-    n2 =1.510;
+    n1 =1.510;
+    n2 =1.008;
     //N_temp = N_temp * -1;
     }
   else {
 
-    n1 =1.510;
-    n2 = 1.008;
+    n1 =1.008;
+    n2 = 1.510;
     cosI = - cosI;
   } 
   double ratio = n1/n2;
