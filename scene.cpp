@@ -277,27 +277,47 @@ bool Scene::findRefractionDirection( vec3 &rayDir, vec3 &N, vec3 &refractionDir 
   // YOUR CODE HERE
   double n1, n2;
   double eta,c1,c2;
-
-  if (rayDir*N >0 ){
+  double cosI = (N.normalize()*rayDir.normalize());
+  vec3 N_temp = N;
+ // float dot = rayDir*N;
+  if (cosI>0){
     n1 =1.008;
     n2 =1.510;
-  }
+    //N_temp = N_temp * -1;
+    }
   else {
 
     n1 =1.510;
     n2 = 1.008;
+    cosI = - cosI;
   } 
   double ratio = n1/n2;
+  double sinT2 = ratio*ratio *(1-(cosI*cosI));
+  double cosT = sqrt(1.0 - sinT2);
+
+
+  //float k =1.0- ratio*ratio *( 1.0 - dot*dot);
+
+  if(sinT2 < 0.0){
+    refractionDir = vec3(0,0,0);
+    return false;
+  }
+  else{
+    refractionDir = ratio * rayDir.normalize() + (ratio * cosI -cosT) * N_temp;
+    return true;
+  }
+
+  /*
 
   double cosI = -(N.normalize()*rayDir.normalize());
-  double sinT2 = ratio*ratio *(1-cosI*cosI);
+  double sinT2 = ratio*ratio *(1-(cosI*cosI));
   if (sinT2 >1.0)
       return false;
   double cosT = sqrt(1.0 - sinT2);
 
-  refractionDir = ratio*rayDir.normalize() + (ratio*cosI*cosT)*N.normalize(); 
+  refractionDir = (ratio*rayDir.normalize() )+( (ratio*cosI*cosT)*N.normalize()); 
 
-  return true;
+  return true;*/
 }
 
 

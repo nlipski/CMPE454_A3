@@ -58,8 +58,17 @@ vec3 PhotonMap::randomDir()
   // YOUR CODE HERE
   //
   // Generate a *uniform* random direction
-  
-  return vec3( 1, 0, 0 );
+  float a,b,c,d;
+  do{
+      a=random();
+      b=random();
+      c=random();
+      d=sqrt((a*a) + (b*b) +(c*c));
+
+  }while (d>1.0)
+
+
+  return vec3( a, b, c);
 }
 
 
@@ -74,24 +83,40 @@ void PhotonMap::forwardTraceRay( vec3 &start, vec3 &dir, vec3 power, int thisObj
   float t;
   int objIndex, objPartIndex;
   Material *mat;
+  float prob;
+  float s,d,ref_t,a;
 
   // YOUR CODE HERE
   //
   // 1. Find first object hit by photon.
   //
+
+  findFirstObjectInt( start, dir, thisObjIndex, thisObjPartIndex, intPoint, intNorm, t, objIndex, objPartIndex, mat );
+
+  
   // 2. Store the photon if it has already has a specular reflection and if this is a diffuse surface.
   //
+
+  if (specularDone && mat->Kd>0){
+      addPhoton(photon(intPoint, power, randomDir()));
+  }
   // 3. Stop if at max depth.
   //
+  if (depth>= treeDisplayDepth)
+    return;
   // 4. Find the probability that the photon continues.
   //
+  prob =0.5;
   // 5. Generate random number.  If that shows that the photon dies, return.
   //
+  if (random()> prob)
+    return;
   // 6. Probabilistically determine the action (one of diffuse or
   //      specular reflection for all surfaces, plus refracted
   //      transmission for non-opaque surfaces).  Based on the action,
   //      compute the power loss (maybe!) and a direction to follow.
   //
+  
   // 7. Send the photon onward with recursive call to forwardTraceRay().
 }
 
