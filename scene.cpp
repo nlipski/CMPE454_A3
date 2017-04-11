@@ -57,6 +57,8 @@ bool Scene::findFirstObjectInt( vec3 rayStart, vec3 rayDir, int thisObjIndex, in
       int intPartIndex;
 
       if (objects[i]->rayInt( rayStart, rayDir, ((i != thisObjIndex) ? -1 : thisObjPartIndex), point, normal, t, intMat, intPartIndex ))
+
+      //printf("%f\n",t);
 	if (0 < t && t < param) {
 	  param = t;
 	  P = point;
@@ -202,7 +204,7 @@ vec3 Scene::raytrace( vec3 &rayStart, vec3 &rayDir, int depth, int thisObjIndex,
     p= P + (d*R) + (a*u)+ (b*v);
     ray_dir=(p-P).normalize();
 	  Iin = raytrace(P,ray_dir, depth, objIndex, objPartIndex);
-	  Iout = Iout +  calcIout(N, R, E, R, kd, mat->ks, mat->n ,Iin);
+	  Iout = Iout +  calcIout(N, R, E, R, kd, mat->ks, mat->n ,Iin)/glossyIterations;
 	}	
       
 
