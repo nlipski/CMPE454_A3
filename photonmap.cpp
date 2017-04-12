@@ -112,8 +112,9 @@ if(!scene->findFirstObjectInt( start, dir, thisObjIndex, thisObjPartIndex, intPo
   //
 
 
-  if (depth>= scene->maxDepth)
-   return;
+  if (depth>= scene->maxDepth){
+        return;
+  }
   // 4. Find the probability that the photon continues.
   //
 
@@ -156,23 +157,28 @@ if(!scene->findFirstObjectInt( start, dir, thisObjIndex, thisObjPartIndex, intPo
   //
   vec3 E =  (-1 * dir).normalize();
     vec3 R = (2 * (E * intNorm)) * intNorm- E;
-   //printf("%f\n",rand_res );
+   
 
-    if(rand_res < prob){
-      return;
+    if(rand_res < prob){//absorb
+      specularDone=true;
+      
     }
-    else if(prob < rand_res && rand_res < Ks + prob){
+    else if(prob < rand_res && rand_res < Ks + prob){ //Specular
     specularDone=true;
     forwardTraceRay( intPoint, R, power, thisObjIndex, thisObjPartIndex, scene, specularDone, depth+1 );
     }
-    else if(Ks + prob< rand_res && rand_res < Ks + prob + Kd ){
+    else if(Ks + prob< rand_res && rand_res < Ks + prob + Kd ){//diffuse
        forwardTraceRay( intPoint, random_dir, power, thisObjIndex, thisObjPartIndex, scene, specularDone, depth+1 );
+        specularDone=true;
 
     }
-    else{
-      scene->findRefractionDirection(dir,intNorm,refract_dir);
+    else{//refract
+      if (scene->findRefractionDirection(dir,intNorm,refract_dir)){
       specularDone=true;
+   
        forwardTraceRay( intPoint, refract_dir, power, thisObjIndex, thisObjPartIndex, scene, specularDone, depth+1 );
+     }
+
     }
 
 
@@ -221,32 +227,36 @@ void KDTree::buildFromPhotons( seq<Photon*> &photons, vec3 &min, vec3 &max )
   
   min = vec3(MAXFLOAT,MAXFLOAT,MAXFLOAT);
   max = vec3(-MAXFLOAT,-MAXFLOAT,-MAXFLOAT);
-Photon p;
+Photon *p;
   // YOUR CODE HERE
   //
   // Set min and max to the corners of the bounding box of all the photons.
   for(int i=0;i< photons.size();i++){
-    p = *photons[i];
-    if(p.pos.x < min.x){
-      min.x = p.pos.x;
+    p = photons[i];
+    //printf("%f\t%f\n",min.x, max.x);
+    if(p->pos.x < min.x)
+      min.x = p->pos.x; 
+    
+    if(p->pos.y< min.y)
+      min.y= p->pos.y;
+    
+    if(p->pos.z < min.z)
+      min.z = p->pos.z;
+    
+    if(p->pos.x > max.x){
+      max.x = p->pos.x;
+      //printf("sausage\n");
     }
-    if(p.pos.y< min.y){
-      min.y= p.pos.y;
+    if(p->pos.y > max.y){
+      max.y = p->pos.y;
     }
-    if(p.pos.z < min.z){
-      min.z = p.pos.z;
-    }
-    if(p.pos.x > max.x){
-      min.x = p.pos.x;
-    }
-    if(p.pos.y > max.y){
-      min.y = p.pos.y;
-    }
-    if(p.pos.z > max.z){
-      min.z = p.pos.z;
+    if(p->pos.z > max.z){
+      max.z = p->pos.z;
     }
 
   }
+  //printf("%f\t\n",photons[photons.size()-1]->pos.x);
+  //printf("%f\t%f\n",min.x, max.x);
 
 
   // Build the tree
@@ -283,7 +293,6 @@ KDSubtree * KDSubtree::buildSubtreeFromPhotons( Photon **photons, int n, vec3 &m
 
 {
   // Empty tree?
-  
   if (n <= 0)
     return NULL;
 
@@ -291,28 +300,46 @@ KDSubtree * KDSubtree::buildSubtreeFromPhotons( Photon **photons, int n, vec3 &m
   //
   // 1. Choose the dimension along which to split.  Set 'splitDir' to 0 (for x), 1 (for y), or 2 (for z)
   //
-  if ((max.x - min.x)>=(max.y - min.y) &&(max.x - min.x)>=(max.z - min.z))
-    splitDir=0;
+  
+  float xdist,ydist,zdist;
+  xdist=max.x - min.x;
+  ydist=max.y - min.y;
+  zdist=max.z - min.z;
+  short i;
+ 
+  //printf("%f\t%f\t%f\n",xdist,ydist,zdist );
+  
+  if (xdist>ydist && xdist> zdist)
+    i=0;
+  else if(ydist>xdist && ydist> zdist)
+    i=1;
+  else 
+    i=2;
+  /*
   else if ((max.y - min.y)>=(max.x - min.x) &&(max.y - min.y)>=(max.z - min.z))
     splitDir=1;
   else
     splitDir=2;
+  */
+  
+   
   // 2. Find the median photon in the split direction.  You can do
   //    this by sorting in O(n log n) (use 'qsort' on Unix) but in
   //    production code you would really do O(n) median finding.
   // 
 
   qsort_r(photons,n, sizeof(photons[0]), 
-                   (int (*)(const void *, const void *, void *))comparePhotonPs,&splitDir);
+                  (int (*)(const void *, const void *, void *))comparePhotonPs,(void*)&i);
   // 3. Split the photons into two groups, construct the root, and
   //    recursively attach the two subtrees to the root.  Return the root.
+  printf("%d\n",n );
+  Photon *photon=photons[n/2];
+  KDSubtree *left,*right;
+  //KDTree tree = new KDTree;
   
-  photon=photons[n/2];
-  KDTree tree = new KDTree;
 
-  tree.root.left = buildSubtreeFromPhotons(&photons[0], n/2, min,photons[n/2] );
-  tree.root.right = buildSubtreeFromPhotons(&photons[0], n/2, photons[n/2],max );
   /*KDSubtree* left,right;
+  tree.root = new KDSubtree(splitdir, photon, left, right);
 
   KDSubtree* root = new KDSubtree  (  splitDir, photon, left, right );
 
@@ -320,7 +347,11 @@ KDSubtree * KDSubtree::buildSubtreeFromPhotons( Photon **photons, int n, vec3 &m
  
   right =buildSubtreeFromPhotons( &photons[0], n/2, photons[n/2], max );*/
 
-  return tree.root;
+  //return KDTree.root;
+  KDSubtree *root = new KDSubtree(i, photon, buildSubtreeFromPhotons(photons, n/2, min,photons[n/2]->pos ), buildSubtreeFromPhotons(photons, n/2, photons[n/2]->pos,max ));
+     
+     return root;
+
 }
 
 
@@ -369,6 +400,16 @@ void KDSubtree::findSubtreeNearest( vec3 &pos, float maxSqDist, int maxCount, pr
   // YOUR CODE HERE
   //
   // 1. If the photon in this subtree's root is close enough to 'pos', add it to the queue.
+  if(maxCount == 0){
+    return;
+  }
+    if (sqrt((pos-photon->pos)*(pos-photon->pos))<maxSqDist){      
+      queue.add(photon,1);
+      if (right!=NULL)
+         right->findSubtreeNearest( pos, maxSqDist,  maxCount-1, queue );
+      else if (left!=NULL )
+          left->findSubtreeNearest( pos, maxSqDist,  maxCount-1, queue );
+    }
   // 2. Recurse into the child subtree if 'pos' is within sqrt(maxSqDist) of that subtree's bounding box.
 }
 

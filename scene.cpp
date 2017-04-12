@@ -240,10 +240,19 @@ vec3 Scene::raytrace( vec3 &rayStart, vec3 &rayDir, int depth, int thisObjIndex,
   // Add contribution from photon map
 
   if (photonMap.isPopulated()) {
-
-
+    seq<Photon*> photons_map = findNearest()
+    //printf("sausage\n");
     // YOUR CODE HERE
-    //
+    Photon *p;
+    for(int i =0; i< photonMap.photons.size(); i ++){
+    p = photonMap.photons[i];
+    vec3 Lp = p->pos - P;
+
+      Iout = Iout + calcIout( N, Lp, p->dir, p->dir, kd, mat->ks, mat->n, p->power);
+
+    }
+ 
+    // Iout = Iout + calcIout( N, L, E, Lr, kd, mat->ks, mat->n, light.colour);
     // Look up photons in the photon map and add their contribution to
     // Iout.  Note that the photon map is available only if you
     // pressed 'm' to populate it.
@@ -289,46 +298,39 @@ bool Scene::findRefractionDirection( vec3 &rayDir, vec3 &N, vec3 &refractionDir 
   double n1, n2;
   double eta,c1,c2;
   double cosI = (N.normalize()*rayDir.normalize());
-  vec3 N_temp = N;
+
+  vec3 E = (-1 * rayDir).normalize();
+  vec3 R = (2 * (E * N)) * N - E;
  // float dot = rayDir*N;
   if (cosI>0){
     n1 =1.510;
     n2 =1.008;
-    //N_temp = N_temp * -1;
+    
     }
   else {
 
     n1 =1.008;
     n2 = 1.510;
-    cosI = - cosI;
+    cosI = -1*cosI;
+
   } 
   double ratio = n1/n2;
-  double sinT2 = ratio*ratio *(1-(cosI*cosI));
-  double cosT = sqrt(1.0 - sinT2);
+  double sinT2 = ratio*sin(acos(cosI));
+  double cosT = sqrt(1.0 - sinT2*sinT2);
 
 
   //float k =1.0- ratio*ratio *( 1.0 - dot*dot);
-
-  if(sinT2 < 0.0){
-    refractionDir = vec3(0,0,0);
+ if(sinT2 > 1.0){
+    //refractionDir =R;
     return false;
   }
+
   else{
-    refractionDir = ratio * rayDir.normalize() + (ratio * cosI -cosT) * N_temp;
+    refractionDir = (ratio * cosI -  cosT ) * N.normalize() + ratio*rayDir.normalize();
     return true;
   }
 
-  /*
 
-  double cosI = -(N.normalize()*rayDir.normalize());
-  double sinT2 = ratio*ratio *(1-(cosI*cosI));
-  if (sinT2 >1.0)
-      return false;
-  double cosT = sqrt(1.0 - sinT2);
-
-  refractionDir = (ratio*rayDir.normalize() )+( (ratio*cosI*cosT)*N.normalize()); 
-
-  return true;*/
 }
 
 
