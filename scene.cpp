@@ -240,9 +240,10 @@ vec3 Scene::raytrace( vec3 &rayStart, vec3 &rayDir, int depth, int thisObjIndex,
   // Add contribution from photon map
 
   if (photonMap.isPopulated()) {
-    seq<Photon*> photons_map = findNearest()
+    //seq<Photon*> photons_map = findNearest()
     //printf("sausage\n");
     // YOUR CODE HERE
+    /*
     Photon *p;
     for(int i =0; i< photonMap.photons.size(); i ++){
     p = photonMap.photons[i];
@@ -251,6 +252,7 @@ vec3 Scene::raytrace( vec3 &rayStart, vec3 &rayDir, int depth, int thisObjIndex,
       Iout = Iout + calcIout( N, Lp, p->dir, p->dir, kd, mat->ks, mat->n, p->power);
 
     }
+    */
  
     // Iout = Iout + calcIout( N, L, E, Lr, kd, mat->ks, mat->n, light.colour);
     // Look up photons in the photon map and add their contribution to

@@ -58,17 +58,21 @@ vec3 PhotonMap::randomDir()
   // YOUR CODE HERE
   //
   // Generate a *uniform* random direction
-  float a,b,c,d;
-
-      a=(((float)rand()/RAND_MAX))*2 -1.0;
-      b=(((float)rand()/RAND_MAX))*2 -1.0;
-      c=(((float)rand()/RAND_MAX))*2 -1.0;
-      d=sqrt((a*a) + (b*b) +(c*c));
-
+  float a,b,c,x,y,z;
+      do{
+        a=(((float)rand()/RAND_MAX))*2 -1.0;
+        b=(((float)rand()/RAND_MAX))*2 -1.0;
+      }while(((a*a)+(b*b))>=1.0);
 
 
+      x=2*a*sqrt(1.0-(a*a)-(b*b));
+      y=2*b*sqrt(1.0-(a*a)-(b*b));
+      z=1.0- (2*((a*a)+(b*b)));
 
-  return vec3(a,b,c);
+
+
+
+  return vec3(x,y,z);
 }
 
 
@@ -124,7 +128,7 @@ if(!scene->findFirstObjectInt( start, dir, thisObjIndex, thisObjPartIndex, intPo
   else
     Ks= mat->ks.z;
 
-	Ks = max(mat->ks.x,mat->ks.y, mat->ks.z);
+	Ks = max(max(mat->ks.x,mat->ks.y), mat->ks.z);
 
 
   if ((mat->kd.x >= mat->kd.y) && (mat->kd.x >= mat->kd.z))
@@ -134,7 +138,7 @@ if(!scene->findFirstObjectInt( start, dir, thisObjIndex, thisObjPartIndex, intPo
   else
     Kd= mat->kd.z;
 
-	Kd = max(mat->kd.x,mat->kd.y, mat->kd.z);
+	Kd = max(max(mat->kd.x,mat->kd.y), mat->kd.z);
 
   //printf("%f    %f     %f\n", intNorm.x,intNorm.y,intNorm.z );
 
@@ -310,7 +314,7 @@ KDSubtree * KDSubtree::buildSubtreeFromPhotons( Photon **photons, int n, vec3 &m
 
   
   
-  KDSubtree *root = new KDSubtree(i, photon, buildSubtreeFromPhotons(photons, n/2, min,photons[n/2]->pos ), buildSubtreeFromPhotons(photons, n/2, photons[n/2]->pos,max ));
+  KDSubtree *root = new KDSubtree(i, photon, buildSubtreeFromPhotons(photons, n/2, min,photons[n/2]->pos ), buildSubtreeFromPhotons(&photons[n/2], n/2, photons[n/2+1]->pos,max ));
      
      return root;
 
