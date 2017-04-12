@@ -94,16 +94,12 @@ void PhotonMap::forwardTraceRay( vec3 &start, vec3 &dir, vec3 power, int thisObj
 
 
 
-if(!scene->findFirstObjectInt( start, dir, thisObjIndex, thisObjPartIndex, intPoint, intNorm, t, objIndex, objPartIndex, mat )){
+if(!scene->findFirstObjectInt( start, dir, thisObjIndex, thisObjPartIndex, intPoint, intNorm, t, objIndex, objPartIndex, mat ))
   return;
-}
-//printf("%d\n", specularDone);
+
 
   // 2. Store the photon if it has already has a specular reflection and if this is a diffuse surface.
   //
-//&& mat->kd!= vec3(0,0,0)
-  //float num=mat->kd*mat->kd;
-  //printf("%f\n",num );
   if (specularDone==true &&  (mat->kd*mat->kd)>0){
       
      photons.add(new Photon(intPoint,  dir,power));
@@ -128,6 +124,8 @@ if(!scene->findFirstObjectInt( start, dir, thisObjIndex, thisObjPartIndex, intPo
   else
     Ks= mat->ks.z;
 
+	Ks = max(mat->ks.x,mat->ks.y, mat->ks.z);
+
 
   if ((mat->kd.x >= mat->kd.y) && (mat->kd.x >= mat->kd.z))
     Kd=mat->kd.x;
@@ -136,13 +134,17 @@ if(!scene->findFirstObjectInt( start, dir, thisObjIndex, thisObjPartIndex, intPo
   else
     Kd= mat->kd.z;
 
+	Kd = max(mat->kd.x,mat->kd.y, mat->kd.z);
+
   //printf("%f    %f     %f\n", intNorm.x,intNorm.y,intNorm.z );
 
   t= 1.0-mat->alpha;
+  
   if(1.0-Ks-Kd-t>0) 
     prob= 1.0-Ks-Kd-t;
   else
     prob=0;
+
   float rand_res=(((float)rand()/RAND_MAX));
   vec3 random_dir =randomDir();
    vec3 refract_dir;
@@ -159,47 +161,25 @@ if(!scene->findFirstObjectInt( start, dir, thisObjIndex, thisObjPartIndex, intPo
     vec3 R = (2 * (E * intNorm)) * intNorm- E;
    
 
-    if(rand_res < prob){//absorb
-      specularDone=true;
-      
+    if(rand_res <= prob){//absorb
+      return;
     }
-    else if(prob < rand_res && rand_res < Ks + prob){ //Specular
+    else if(rand_res>prob && rand_res <= (Ks + prob)){ //Specular
     specularDone=true;
-    forwardTraceRay( intPoint, R, power, thisObjIndex, thisObjPartIndex, scene, specularDone, depth+1 );
+    forwardTraceRay( intPoint, R, power, thisObjIndex, thisObjPartIndex, scene, specularDone, depth++ );
     }
-    else if(Ks + prob< rand_res && rand_res < Ks + prob + Kd ){//diffuse
-       forwardTraceRay( intPoint, random_dir, power, thisObjIndex, thisObjPartIndex, scene, specularDone, depth+1 );
-        specularDone=true;
-
+    else if( rand_res>(Ks + prob) && rand_res <= (Ks + prob + Kd) ){//diffuse
+       
+	   forwardTraceRay( intPoint, random_dir, power, thisObjIndex, thisObjPartIndex, scene, specularDone, depth++ );
     }
     else{//refract
       if (scene->findRefractionDirection(dir,intNorm,refract_dir)){
       specularDone=true;
-   
        forwardTraceRay( intPoint, refract_dir, power, thisObjIndex, thisObjPartIndex, scene, specularDone, depth+1 );
      }
 
     }
 
-
-
-
-  /*  if(prob+Ks +Kd<rand_res){
-      scene->findRefractionDirection(dir,intNorm,refract_dir);
-      specularDone=true;
-       forwardTraceRay( intPoint, refract_dir, power, thisObjIndex, thisObjPartIndex, scene, specularDone, depth+1 );
-       
-    }
-    else if(prob+Ks<rand_res<prob+Ks + Kd){
-      forwardTraceRay( intPoint, random_dir, power, thisObjIndex, thisObjPartIndex, scene, specularDone, depth+1 );
-
-    }
-    else if(prob<rand_res){
-      
-    }
-    else
-      return;
-    */
 
 
   
@@ -307,22 +287,14 @@ KDSubtree * KDSubtree::buildSubtreeFromPhotons( Photon **photons, int n, vec3 &m
   zdist=max.z - min.z;
   short i;
  
-  //printf("%f\t%f\t%f\n",xdist,ydist,zdist );
-  
+ 
   if (xdist>ydist && xdist> zdist)
     i=0;
   else if(ydist>xdist && ydist> zdist)
     i=1;
   else 
     i=2;
-  /*
-  else if ((max.y - min.y)>=(max.x - min.x) &&(max.y - min.y)>=(max.z - min.z))
-    splitDir=1;
-  else
-    splitDir=2;
-  */
   
-   
   // 2. Find the median photon in the split direction.  You can do
   //    this by sorting in O(n log n) (use 'qsort' on Unix) but in
   //    production code you would really do O(n) median finding.
@@ -335,19 +307,9 @@ KDSubtree * KDSubtree::buildSubtreeFromPhotons( Photon **photons, int n, vec3 &m
   printf("%d\n",n );
   Photon *photon=photons[n/2];
   KDSubtree *left,*right;
-  //KDTree tree = new KDTree;
+
   
-
-  /*KDSubtree* left,right;
-  tree.root = new KDSubtree(splitdir, photon, left, right);
-
-  KDSubtree* root = new KDSubtree  (  splitDir, photon, left, right );
-
-  left = buildSubtreeFromPhotons( &photons[0], n/2, min,photons[n/2] );
- 
-  right =buildSubtreeFromPhotons( &photons[0], n/2, photons[n/2], max );*/
-
-  //return KDTree.root;
+  
   KDSubtree *root = new KDSubtree(i, photon, buildSubtreeFromPhotons(photons, n/2, min,photons[n/2]->pos ), buildSubtreeFromPhotons(photons, n/2, photons[n/2]->pos,max ));
      
      return root;

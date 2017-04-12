@@ -103,7 +103,7 @@ class PhotonMap {
   int treeDisplayDepth;		// max depth to display KD partitions
 
   PhotonMap():
-    tree(NULL), treeDisplayDepth(15) {}
+    tree(NULL), treeDisplayDepth(1) {}
 
   ~PhotonMap() {
     clear();
