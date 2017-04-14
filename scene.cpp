@@ -238,21 +238,21 @@ vec3 Scene::raytrace( vec3 &rayStart, vec3 &rayDir, int depth, int thisObjIndex,
   }
 
   // Add contribution from photon map
-
+//KDTree::findNearest( vec3 &pos, float maxSqDist, int maxCount )
+  //printf("%d\n",photonMap.isPopulated() );
   if (photonMap.isPopulated()) {
-    //seq<Photon*> photons_map = findNearest()
     //printf("sausage\n");
-    // YOUR CODE HERE
-    /*
-    Photon *p;
-    for(int i =0; i< photonMap.photons.size(); i ++){
-    p = photonMap.photons[i];
-    vec3 Lp = p->pos - P;
-
-      Iout = Iout + calcIout( N, Lp, p->dir, p->dir, kd, mat->ks, mat->n, p->power);
+   seq<Photon*>  photons_near = *(photonMap.findNearest(P, 1.5,  10 ));
+    // seq<Photon*> photons_map = photonMap.findNearest(P, 0.5f,100);
+    //printf("\t\t%d\n",photosad
+    
+    for(int i = 0; i<photons_near.size(); i ++){
+      Photon p= *photons_near[i];
+      vec3 Lp = p.pos - P;
+      Iout = Iout + calcIout( N, Lp,  p.dir, p.dir, kd, mat->ks, mat->n, p.power);
 
     }
-    */
+  }
  
     // Iout = Iout + calcIout( N, L, E, Lr, kd, mat->ks, mat->n, light.colour);
     // Look up photons in the photon map and add their contribution to
@@ -276,8 +276,10 @@ vec3 Scene::raytrace( vec3 &rayStart, vec3 &rayDir, int depth, int thisObjIndex,
     //
     // You should modify Scene::findRefractionDirection() and use it.
     vec3 refractionDir; 
+  //  printf("Iout before: %f\n",Iout.length());
     if(findRefractionDirection(rayDir, N, refractionDir))
        Iout = Iout*(opacity) + (1-opacity)*raytrace(P,refractionDir, depth, objIndex, objPartIndex);
+    //  printf("Iout after: %f\n",Iout.length());
     
   }
 
@@ -299,38 +301,46 @@ bool Scene::findRefractionDirection( vec3 &rayDir, vec3 &N, vec3 &refractionDir 
   // YOUR CODE HERE
   double n1, n2;
   double eta,c1,c2;
+  vec3 cross = rayDir^N;
+  int direction =1;
+
+
   double cosI = (N.normalize()*rayDir.normalize());
 
   vec3 E = (-1 * rayDir).normalize();
   vec3 R = (2 * (E * N)) * N - E;
- // float dot = rayDir*N;
-  if (cosI>0){
-    n1 =1.510;
-    n2 =1.008;
-    
-    }
-  else {
-
-    n1 =1.008;
-    n2 = 1.510;
-    cosI = -1*cosI;
-
-  } 
-  double ratio = n1/n2;
-  double sinT2 = ratio*sin(acos(cosI));
-  double cosT = sqrt(1.0 - sinT2*sinT2);
 
 
-  //float k =1.0- ratio*ratio *( 1.0 - dot*dot);
- if(sinT2 > 1.0){
-    //refractionDir =R;
-    return false;
-  }
 
-  else{
-    refractionDir = (ratio * cosI -  cosT ) * N.normalize() + ratio*rayDir.normalize();
+ if (N.normalize() == rayDir.normalize())
+  {
+    refractionDir = rayDir;
     return true;
   }
+
+  else if (cosI>0){
+    n1 =1.510;
+    n2 =1.008;
+    direction=1; 
+  }
+  else{
+    n1 =1.008;
+    n2 = 1.510;
+    direction=-1;
+  }
+ // float dot = rayDir*N;
+ 
+  double ratio = n1/n2;
+  double theta = acos(cosI);
+  double phi = asin(ratio*sin(theta));
+ // double cosT = sqrt(1.0 - sinT2*sinT2);
+  //if (ratio*sin(theta)>=1.0)
+    //return false;
+
+  refractionDir = direction * cos(phi)* N.normalize();
+  refractionDir = refractionDir + (ratio*sin(theta)*(N^cross).normalize());
+
+
 
 
 }

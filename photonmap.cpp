@@ -8,7 +8,7 @@
 #include "priority.cpp"		// necessary to show implemenation to compiler
 
 
-#define PHOTONS_PER_LIGHT 1000000// lots!
+#define PHOTONS_PER_LIGHT 100000// lots!
 
 
 // Trace lots of rays outward in random directions from each light.
@@ -31,7 +31,7 @@ void PhotonMap::populate( Scene *scene )
 	for ( i=0; i< scene->lights.size(); i++){
 		for (j=0; j<PHOTONS_PER_LIGHT; j++){
 			vec3 dir=randomDir();
-			forwardTraceRay((scene->lights[i]->position),dir,scene->lights[i]->colour/PHOTONS_PER_LIGHT, i, j,scene, false, 0);
+			forwardTraceRay((scene->lights[i]->position),dir,scene->lights[i]->colour/PHOTONS_PER_LIGHT, -1,-1,scene, false, 0);
 			
 		}
 		
@@ -97,7 +97,6 @@ void PhotonMap::forwardTraceRay( vec3 &start, vec3 &dir, vec3 power, int thisObj
   //
 
 
-
 if(!scene->findFirstObjectInt( start, dir, thisObjIndex, thisObjPartIndex, intPoint, intNorm, t, objIndex, objPartIndex, mat ))
   return;
 
@@ -121,27 +120,15 @@ if(!scene->findFirstObjectInt( start, dir, thisObjIndex, thisObjPartIndex, intPo
   // 5. Generate random number.  If that shows that the photon dies, return.
   //
   //printf("%f\t%f\t%f",mat->ks.x,mat->ks.y,mat->ks.z);
-  if ((mat->ks.x >= mat->ks.y) && (mat->ks.x >= mat->ks.z))
-    Ks=mat->ks.x;
-  else if((mat->ks.y >= mat->ks.z) && (mat->ks.y >= mat->ks.x))
-    Ks=mat->ks.y;
-  else
-    Ks= mat->ks.z;
+
 
 	Ks = max(max(mat->ks.x,mat->ks.y), mat->ks.z);
 
 
-  if ((mat->kd.x >= mat->kd.y) && (mat->kd.x >= mat->kd.z))
-    Kd=mat->kd.x;
-  else if((mat->kd.y >= mat->kd.z) && (mat->kd.y >= mat->kd.x))
-    Kd=mat->kd.y;
-  else
-    Kd= mat->kd.z;
-
 	Kd = max(max(mat->kd.x,mat->kd.y), mat->kd.z);
 
   //printf("%f    %f     %f\n", intNorm.x,intNorm.y,intNorm.z );
-
+  //float alpha=(((float)rand()/RAND_MAX));
   t= 1.0-mat->alpha;
   
   if(1.0-Ks-Kd-t>0) 
@@ -178,7 +165,7 @@ if(!scene->findFirstObjectInt( start, dir, thisObjIndex, thisObjPartIndex, intPo
     }
     else{//refract
       if (scene->findRefractionDirection(dir,intNorm,refract_dir)){
-      specularDone=true;
+          specularDone=true;
        forwardTraceRay( intPoint, refract_dir, power, thisObjIndex, thisObjPartIndex, scene, specularDone, depth+1 );
      }
 
@@ -351,7 +338,7 @@ seq<Photon*> * KDTree::findNearest( vec3 &pos, float maxSqDist, int maxCount )
 
   while (!queue.empty())
     photons->add( queue.remove_max() );
-
+  //printf("photons size: %d\n", photons->size());
   return photons;
 }
 
@@ -365,18 +352,50 @@ void KDSubtree::findSubtreeNearest( vec3 &pos, float maxSqDist, int maxCount, pr
 {
   // YOUR CODE HERE
   //
-  // 1. If the photon in this subtree's root is close enough to 'pos', add it to the queue.
   if(maxCount == 0){
+
     return;
   }
-    if (sqrt((pos-photon->pos)*(pos-photon->pos))<maxSqDist){      
-      queue.add(photon,1);
-      if (right!=NULL)
-         right->findSubtreeNearest( pos, maxSqDist,  maxCount-1, queue );
-      else if (left!=NULL )
-          left->findSubtreeNearest( pos, maxSqDist,  maxCount-1, queue );
-    }
-  // 2. Recurse into the child subtree if 'pos' is within sqrt(maxSqDist) of that subtree's bounding box.
+    // 1. If the photon in this subtree's root is close enough to 'pos', add it to the queue.
+      //printf("\t%d\n",queue.n);
+
+        //printf("sausage1\n");
+
+  float distL,distR;
+
+
+  float diff = (photon->pos - pos).length();
+  if(fabs(diff) < maxSqDist){
+    queue.add(photon,1);
+    maxCount -= 1;
+  }
+
+    
+   
+    //printf("\t%d\n",queue.size );
+  if(left!=NULL){
+    if (splitDir==0)
+      distL = fabs((left->photon->pos.x - pos.x));
+    else if(splitDir ==1)
+      distL = fabs((left->photon->pos.y - pos.y));
+    else
+      distL = fabs((left->photon->pos.z - pos.z));
+    if (distL< maxSqDist)
+      left->findSubtreeNearest(pos,maxSqDist,maxCount,queue);
+  }
+
+  if(right!=NULL){
+    if (splitDir==0)
+      distR = fabs((right->photon->pos.x - pos.x));
+    else if(splitDir ==1)
+      distR = fabs((right->photon->pos.y - pos.y));
+    else
+      distR = fabs((right->photon->pos.z - pos.z));
+    if (distR< maxSqDist)
+      right->findSubtreeNearest(pos,maxSqDist,maxCount,queue);
+  }
+
+
 }
 
 
